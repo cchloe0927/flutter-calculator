@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final Color? numColor = Colors.grey[800];
   final Color? initColor = Colors.grey[900];
   final Color? calculateColor = const Color(0xFFff9502);
@@ -14,7 +21,148 @@ class MyApp extends StatelessWidget {
     color: Colors.white.withOpacity(0.8),
   );
 
-  MyApp({super.key});
+  List<String> equalRePush = [];
+  String variableValueAfter = "0";
+  num variableValueBefore = 0;
+
+  bool operateBtn = false;
+
+  bool plusState = false;
+  bool minusState = false;
+  bool multiplyState = false;
+  bool divideState = false;
+
+  void initOperateState() {
+    plusState = false;
+    minusState = false;
+    multiplyState = false;
+    divideState = false;
+  }
+
+  void initVariableValue() {
+    variableValueAfter = "0";
+  }
+
+  void onClickACBtn() {
+    variableValueBefore = 0;
+    initVariableValue();
+    initOperateState();
+    setState(() {});
+  }
+
+  void onDecimalPoint() {
+    if (variableValueAfter.contains('.')) {
+      return;
+    }
+    variableValueAfter += ".";
+    setState(() {});
+  }
+
+  void onClickNumberBtn(String value) {
+    if (operateBtn) {
+      operateBtn = false;
+      initVariableValue();
+    }
+    if (variableValueAfter == "0" && variableValueAfter.length == 1) {
+      variableValueAfter = '';
+    }
+    variableValueAfter += value;
+    setState(() {});
+  }
+
+  //사칙연산 버튼
+  void onClickOperateBtn(String type) {
+    initOperateState(); //사칙연산 버튼 초기화
+    if (variableValueBefore != 0) {
+      switch (type) {
+        case "+":
+          variableValueBefore += num.parse(variableValueAfter);
+          break;
+        case "―":
+          variableValueBefore -= num.parse(variableValueAfter);
+          break;
+        case "x":
+          variableValueBefore *= num.parse(variableValueAfter);
+          break;
+        case "/":
+          variableValueBefore /= num.parse(variableValueAfter);
+          break;
+      }
+      variableValueAfter = variableValueBefore.toString();
+    } else {
+      variableValueBefore =
+          num.parse(variableValueAfter); //=가 아닌 사칙연산버튼만 눌러도 자동 계산되게 하기!
+    }
+    initOperateState(); //사칙연산 버튼 클릭 시 모든 연산 버튼 false 만들어 주고 나서 받아온 타입만 true로 변경!
+    switch (type) {
+      case "+":
+        plusState = true;
+        break;
+      case "―":
+        minusState = true;
+        break;
+      case "x":
+        multiplyState = true;
+        break;
+      case "/":
+        divideState = true;
+        break;
+    }
+    operateBtn = true; //variableValueAfter을 0으로 만들고->""이 되면서 새로운 화면 출력 값 만듦!
+    setState(() {});
+  }
+
+  void onClickEqualBtn() {
+    equalRePush.add(variableValueAfter);
+    // print("= 버튼 State 값 : $minusState");
+
+    if (plusState) {
+      if (variableValueBefore == 0) {
+        variableValueAfter =
+            (num.parse(variableValueAfter) + num.parse(equalRePush[0]))
+                .toString();
+      } else {
+        variableValueAfter =
+            (variableValueBefore + num.parse(variableValueAfter)).toString();
+      }
+    } else if (minusState) {
+      if (variableValueBefore == 0) {
+        variableValueAfter =
+            (num.parse(variableValueAfter) - num.parse(equalRePush[0]))
+                .toString();
+      } else {
+        variableValueAfter =
+            (variableValueBefore - num.parse(variableValueAfter)).toString();
+      }
+    } else if (multiplyState) {
+      if (variableValueBefore == 0) {
+        variableValueAfter =
+            (num.parse(variableValueAfter) * num.parse(equalRePush[0]))
+                .toString();
+      } else {
+        variableValueAfter =
+            (variableValueBefore * num.parse(variableValueAfter)).toString();
+      }
+    } else if (divideState) {
+      if (num.parse(variableValueAfter) == 0) {
+        variableValueAfter = "숫자 아님";
+      } else if (variableValueBefore == 0) {
+        variableValueAfter =
+            (num.parse(variableValueAfter) / num.parse(equalRePush[0]))
+                .toString();
+      } else {
+        variableValueAfter =
+            (variableValueBefore / num.parse(variableValueAfter)).toString();
+      }
+    }
+    variableValueBefore = 0; //variableValueBefore 화면의 variableValueAfter
+    operateBtn = true; //variableValueAfter을 0으로 만들고->""이 되면서 새로운 화면 출력 값 만듦!
+    setState(() {});
+
+    // print("= 버튼 equalRePush 값!!! : $equalRePush");
+    // print("= 버튼 variableValueBefore 값!!! : $variableValueBefore");
+    // print("= 버튼 variableValueAfter 값!!! : $variableValueAfter");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +175,12 @@ class MyApp extends StatelessWidget {
               width: double.infinity,
               height: 340,
               alignment: const Alignment(0.9, 1.4),
-              child: const Text(
-                "0",
+              child: Text(
+                variableValueAfter,
                 style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 100,
-                ),
+                    color: Colors.white,
+                    fontSize: variableValueAfter.length > 7 ? 60 : 100,
+                    fontWeight: FontWeight.w200),
               ),
             ),
             Expanded(
@@ -44,10 +192,10 @@ class MyApp extends StatelessWidget {
                   maxCrossAxisExtent: 120,
                   children: [
                     TextButton(
-                      onPressed: () {},
+                      onPressed: onClickACBtn,
                       style: TextButton.styleFrom(backgroundColor: initColor),
                       child: Text(
-                        'AC',
+                        variableValueAfter == "0" ? "AC" : "C",
                         style: textStyle,
                       ),
                     ),
@@ -58,7 +206,7 @@ class MyApp extends StatelessWidget {
                       color: initColor,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickOperateBtn("/"),
                       style:
                           TextButton.styleFrom(backgroundColor: calculateColor),
                       child: Text(
@@ -67,64 +215,64 @@ class MyApp extends StatelessWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("7"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('7', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("8"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('8', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("9"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('9', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickOperateBtn("x"),
                       style:
                           TextButton.styleFrom(backgroundColor: calculateColor),
-                      child: Text('×', style: textStyle),
+                      child: Text('x', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("4"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('4', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("5"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('5', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("6"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('6', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickOperateBtn("―"),
                       style:
                           TextButton.styleFrom(backgroundColor: calculateColor),
                       child: Text('―', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("1"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('1', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("2"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('2', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("3"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('3', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickOperateBtn("+"),
                       style:
                           TextButton.styleFrom(backgroundColor: calculateColor),
                       child: Text('+', style: textStyle),
@@ -133,17 +281,17 @@ class MyApp extends StatelessWidget {
                       color: numColor,
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () => onClickNumberBtn("0"),
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('0', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: onDecimalPoint,
                       style: TextButton.styleFrom(backgroundColor: numColor),
                       child: Text('.', style: textStyle),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: onClickEqualBtn,
                       style:
                           TextButton.styleFrom(backgroundColor: calculateColor),
                       child: Text('=', style: textStyle),
