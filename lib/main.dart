@@ -58,6 +58,13 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
+  convertDecimalToInt(num decimal) {
+    if (decimal != decimal.round()) {
+      return decimal;
+    }
+    return decimal.toInt();
+  }
+
   void onClickNumberBtn(String value) {
     if (operateBtn) {
       operateBtn = false;
@@ -72,20 +79,21 @@ class _MyAppState extends State<MyApp> {
 
   //사칙연산 버튼
   void onClickOperateBtn(String type) {
+    num after = num.parse(variableValueAfter);
     initOperateState(); //사칙연산 버튼 초기화
     if (variableValueBefore != 0) {
       switch (type) {
         case "+":
-          variableValueBefore += num.parse(variableValueAfter);
+          variableValueBefore += after;
           break;
         case "―":
-          variableValueBefore -= num.parse(variableValueAfter);
+          variableValueBefore -= after;
           break;
         case "x":
-          variableValueBefore *= num.parse(variableValueAfter);
+          variableValueBefore *= after;
           break;
         case "/":
-          variableValueBefore /= num.parse(variableValueAfter);
+          variableValueBefore /= after;
           break;
       }
       variableValueAfter = variableValueBefore.toString();
@@ -113,17 +121,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   void onClickEqualBtn() {
+    num after = num.parse(variableValueAfter);
     equalRePush.add(variableValueAfter);
     // print("= 버튼 State 값 : $minusState");
 
     if (plusState) {
       if (variableValueBefore == 0) {
-        variableValueAfter =
-            (num.parse(variableValueAfter) + num.parse(equalRePush[0]))
-                .toString();
+        variableValueAfter = (convertDecimalToInt(
+                (num.parse(variableValueAfter) + num.parse(equalRePush[0])))
+            .toString());
       } else {
         variableValueAfter =
-            (variableValueBefore + num.parse(variableValueAfter)).toString();
+            (convertDecimalToInt(variableValueBefore + after)).toString();
       }
     } else if (minusState) {
       if (variableValueBefore == 0) {
@@ -132,7 +141,7 @@ class _MyAppState extends State<MyApp> {
                 .toString();
       } else {
         variableValueAfter =
-            (variableValueBefore - num.parse(variableValueAfter)).toString();
+            (convertDecimalToInt(variableValueBefore - after)).toString();
       }
     } else if (multiplyState) {
       if (variableValueBefore == 0) {
@@ -141,7 +150,7 @@ class _MyAppState extends State<MyApp> {
                 .toString();
       } else {
         variableValueAfter =
-            (variableValueBefore * num.parse(variableValueAfter)).toString();
+            (convertDecimalToInt(variableValueBefore * after)).toString();
       }
     } else if (divideState) {
       if (num.parse(variableValueAfter) == 0) {
@@ -152,7 +161,7 @@ class _MyAppState extends State<MyApp> {
                 .toString();
       } else {
         variableValueAfter =
-            (variableValueBefore / num.parse(variableValueAfter)).toString();
+            (convertDecimalToInt(variableValueBefore / after)).toString();
       }
     }
     variableValueBefore = 0; //variableValueBefore 화면의 variableValueAfter
