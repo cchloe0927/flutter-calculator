@@ -15,22 +15,21 @@ class _MyAppState extends State<MyApp> {
   final Color? numColor = Colors.grey[800];
   final Color? initColor = Colors.grey[900];
   final Color? calculateColor = const Color(0xFFff9502);
-
   final TextStyle textStyle = TextStyle(
     fontSize: 40,
     color: Colors.white.withOpacity(0.8),
   );
 
-  List<String> equalRePush = [];
-  String variableValueAfter = "0";
-  num variableValueBefore = 0;
+  List<String> equalRePush = []; //마지막에 입력받은 숫자 사용하는 배열
+  String variableValueAfter = "0"; //화면에 보여지는 숫자
+  num variableValueBefore = 0; //계속 더해지는 숫자
 
-  bool operateBtn = false;
-
-  bool plusState = false;
-  bool minusState = false;
-  bool multiplyState = false;
-  bool divideState = false;
+  bool operateBtnState = false; //사칙연산 활성화 상태
+  bool numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+  bool plusState = false; //플러스 상태
+  bool minusState = false; //마이너스 상태
+  bool multiplyState = false; //곱하기 상태
+  bool divideState = false; // 나누기 상태
 
   void initOperateState() {
     plusState = false;
@@ -39,26 +38,32 @@ class _MyAppState extends State<MyApp> {
     divideState = false;
   }
 
-  void initVariableValue() {
-    variableValueAfter = "0";
-  }
-
   void onClickACBtn() {
     variableValueBefore = 0;
-    initVariableValue();
+    variableValueAfter = "0";
+    equalRePush.clear();
     initOperateState();
     setState(() {});
   }
 
   void onDecimalPoint() {
-    if (variableValueAfter.contains('.')) {
-      return;
+    // = 버튼 클릭 후 소수점을 누르면 계산 끝난걸로 간주 후 새롭게 계산
+    if (operateBtnState) {
+      operateBtnState = false;
+      variableValueAfter = "0.";
     }
-    variableValueAfter += ".";
+    // = 버튼 클릭 전 계산이 끝나지 않은 상태
+    else {
+      if (variableValueAfter.contains('.')) {
+        return;
+      }
+      variableValueAfter += ".";
+    }
     setState(() {});
   }
 
-  convertDecimalToInt(num decimal) {
+  //소수점 정수로 전환 함수
+  convertInt(num decimal) {
     if (decimal != decimal.round()) {
       return decimal;
     }
@@ -66,42 +71,48 @@ class _MyAppState extends State<MyApp> {
   }
 
   void onClickNumberBtn(String value) {
-    if (operateBtn) {
-      operateBtn = false;
-      initVariableValue();
+    if (operateBtnState) {
+      operateBtnState = false;
+      variableValueAfter = "0";
     }
     if (variableValueAfter == "0" && variableValueAfter.length == 1) {
       variableValueAfter = '';
     }
     variableValueAfter += value;
+    numberBtnState = true; //숫자 누르기 전에 사칙연산 변경 시 기준점 역할
     setState(() {});
   }
 
-  //사칙연산 버튼
   void onClickOperateBtn(String type) {
-    num after = num.parse(variableValueAfter);
-    initOperateState(); //사칙연산 버튼 초기화
-    if (variableValueBefore != 0) {
+    equalRePush.clear(); //= 버튼 클릭 후 사칙연산 버튼 클릭 시 배열 초기화
+    num afterNum = num.parse(variableValueAfter);
+
+    //variableValueBefore != 0 아닌 경우는 = 버튼 없이 사칙연산 버튼을 다시 눌러서 계속 계산할 때
+    //numberBtnState가 false이면 숫자 입력없이 사칙연산 변경했을 떄
+    if (variableValueBefore != 0 && numberBtnState) {
       switch (type) {
         case "+":
-          variableValueBefore += after;
+          variableValueBefore += afterNum;
           break;
         case "―":
-          variableValueBefore -= after;
+          variableValueBefore -= afterNum;
           break;
         case "x":
-          variableValueBefore *= after;
+          variableValueBefore *= afterNum;
           break;
         case "/":
-          variableValueBefore /= after;
+          variableValueBefore /= afterNum;
           break;
       }
-      variableValueAfter = variableValueBefore.toString();
-    } else {
-      variableValueBefore =
-          num.parse(variableValueAfter); //=가 아닌 사칙연산버튼만 눌러도 자동 계산되게 하기!
+      variableValueAfter = convertInt(variableValueBefore).toString();
     }
+    //variableValueBefore 0인 경우는 = 버튼 클릭 후 나온 결과값(variableValueAfter)을 variableValueBefore에 저장해둠!
+    else {
+      variableValueBefore = num.parse(variableValueAfter);
+    }
+
     initOperateState(); //사칙연산 버튼 클릭 시 모든 연산 버튼 false 만들어 주고 나서 받아온 타입만 true로 변경!
+
     switch (type) {
       case "+":
         plusState = true;
@@ -116,61 +127,74 @@ class _MyAppState extends State<MyApp> {
         divideState = true;
         break;
     }
-    operateBtn = true; //variableValueAfter을 0으로 만들고->""이 되면서 새로운 화면 출력 값 만듦!
+
+    numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+    operateBtnState = true; //variableValueAfter = 0 -> ""이 되면서 새로운 화면 출력 값 만듦
     setState(() {});
   }
 
   void onClickEqualBtn() {
-    num after = num.parse(variableValueAfter);
-    equalRePush.add(variableValueAfter);
-    // print("= 버튼 State 값 : $minusState");
+    num afterNum = num.parse(variableValueAfter);
+    equalRePush.add(variableValueAfter); //두번째로 더해지는 수를 배열에 담은 후 인덱스 0번째를 계속 연산함
+
+    // print(equalRePush);
+    // print("variableValueBefore $variableValueBefore");
+    // print("afterNum $afterNum");
 
     if (plusState) {
       if (variableValueBefore == 0) {
-        variableValueAfter = (convertDecimalToInt(
-                (num.parse(variableValueAfter) + num.parse(equalRePush[0])))
-            .toString());
+        variableValueAfter = (convertInt(
+                num.parse(variableValueAfter) + num.parse(equalRePush[0])))
+            .toString();
+      } else if (equalRePush.isEmpty) {
+        variableValueAfter =
+            (convertInt(num.parse(variableValueAfter) + afterNum)).toString();
       } else {
         variableValueAfter =
-            (convertDecimalToInt(variableValueBefore + after)).toString();
+            (convertInt(variableValueBefore + afterNum)).toString();
       }
     } else if (minusState) {
       if (variableValueBefore == 0) {
+        variableValueAfter = (convertInt(
+                num.parse(variableValueAfter) - num.parse(equalRePush[0])))
+            .toString();
+      } else if (equalRePush.isEmpty) {
         variableValueAfter =
-            (num.parse(variableValueAfter) - num.parse(equalRePush[0]))
-                .toString();
+            (convertInt(num.parse(variableValueAfter) - afterNum)).toString();
       } else {
         variableValueAfter =
-            (convertDecimalToInt(variableValueBefore - after)).toString();
+            (convertInt(variableValueBefore - afterNum)).toString();
       }
     } else if (multiplyState) {
       if (variableValueBefore == 0) {
+        variableValueAfter = (convertInt(
+                num.parse(variableValueAfter) * num.parse(equalRePush[0])))
+            .toString();
+      } else if (equalRePush.isEmpty) {
         variableValueAfter =
-            (num.parse(variableValueAfter) * num.parse(equalRePush[0]))
-                .toString();
+            (convertInt(num.parse(variableValueAfter) * afterNum)).toString();
       } else {
         variableValueAfter =
-            (convertDecimalToInt(variableValueBefore * after)).toString();
+            (convertInt(variableValueBefore * afterNum)).toString();
       }
     } else if (divideState) {
       if (num.parse(variableValueAfter) == 0) {
         variableValueAfter = "숫자 아님";
       } else if (variableValueBefore == 0) {
+        variableValueAfter = (convertInt(
+                num.parse(variableValueAfter) / num.parse(equalRePush[0])))
+            .toString();
+      } else if (equalRePush.isEmpty) {
         variableValueAfter =
-            (num.parse(variableValueAfter) / num.parse(equalRePush[0]))
-                .toString();
+            (convertInt(num.parse(variableValueAfter) / afterNum)).toString();
       } else {
         variableValueAfter =
-            (convertDecimalToInt(variableValueBefore / after)).toString();
+            (convertInt(variableValueBefore / afterNum)).toString();
       }
     }
-    variableValueBefore = 0; //variableValueBefore 화면의 variableValueAfter
-    operateBtn = true; //variableValueAfter을 0으로 만들고->""이 되면서 새로운 화면 출력 값 만듦!
+    variableValueBefore = 0; //variableValueBefore을 0 기준점으로 = 버튼만 눌렀을 때 연산함
+    operateBtnState = true;
     setState(() {});
-
-    // print("= 버튼 equalRePush 값!!! : $equalRePush");
-    // print("= 버튼 variableValueBefore 값!!! : $variableValueBefore");
-    // print("= 버튼 variableValueAfter 값!!! : $variableValueAfter");
   }
 
   @override
