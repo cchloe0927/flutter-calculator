@@ -88,21 +88,23 @@ class _MyAppState extends State<MyApp> {
     num afterNum = num.parse(variableValueAfter);
 
     //variableValueBefore != 0 아닌 경우는 = 버튼 없이 사칙연산 버튼을 다시 눌러서 계속 계산할 때
-    //numberBtnState가 false이면 숫자 입력없이 사칙연산 변경했을 떄
+    //numberBtnState가 false이면 숫자 입력없이 사칙연산만 변경했을 떄
     if (variableValueBefore != 0 && numberBtnState) {
-      switch (type) {
-        case "+":
-          variableValueBefore += afterNum;
-          break;
-        case "―":
-          variableValueBefore -= afterNum;
-          break;
-        case "x":
-          variableValueBefore *= afterNum;
-          break;
-        case "/":
-          variableValueBefore /= afterNum;
-          break;
+      // print("plusState $plusState");
+      // print("minusState $minusState");
+
+      /** 문제! 1 + 1 - 를 하게되면 2번째에 클린된 연산자가 실행됌
+      * 처음에는 switch 문으로 사칙연산 타입을 받아와서 처리했음 -> 그래서 사칙연산을 누른 순간의 사칙연산으로 계산이 됌
+      * 따라서 if문으로 바꾸고 변수로 선언한 사칙연산들의 불리언 값을 통해서 받아온 값으로 if문을 실행함
+      */
+      if (plusState) {
+        variableValueBefore += afterNum;
+      } else if (minusState) {
+        variableValueBefore -= afterNum;
+      } else if (multiplyState) {
+        variableValueBefore *= afterNum;
+      } else if (divideState) {
+        variableValueBefore /= afterNum;
       }
       variableValueAfter = convertInt(variableValueBefore).toString();
     }
@@ -111,7 +113,7 @@ class _MyAppState extends State<MyApp> {
       variableValueBefore = num.parse(variableValueAfter);
     }
 
-    initOperateState(); //사칙연산 버튼 클릭 시 모든 연산 버튼 false 만들어 주고 나서 받아온 타입만 true로 변경!
+    initOperateState(); //사칙연산 버튼 클릭 후 다시 사칙 연산을 false 만들어 줘야 다른 사칙연산 값을 받아서 적용함
 
     switch (type) {
       case "+":
@@ -127,8 +129,7 @@ class _MyAppState extends State<MyApp> {
         divideState = true;
         break;
     }
-
-    numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+    //numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
     operateBtnState = true; //variableValueAfter = 0 -> ""이 되면서 새로운 화면 출력 값 만듦
     setState(() {});
   }
@@ -136,10 +137,6 @@ class _MyAppState extends State<MyApp> {
   void onClickEqualBtn() {
     num afterNum = num.parse(variableValueAfter);
     equalRePush.add(variableValueAfter); //두번째로 더해지는 수를 배열에 담은 후 인덱스 0번째를 계속 연산함
-
-    // print(equalRePush);
-    // print("variableValueBefore $variableValueBefore");
-    // print("afterNum $afterNum");
 
     if (plusState) {
       if (variableValueBefore == 0) {
