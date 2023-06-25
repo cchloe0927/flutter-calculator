@@ -20,36 +20,38 @@ class _MyAppState extends State<MyApp> {
     color: Colors.white.withOpacity(0.8),
   );
 
-  List<String> equalRePush = []; //마지막에 입력받은 숫자 사용하는 배열
+  // List<String> equalRePush = []; //마지막에 입력받은 숫자 사용하는 배열
+  // 📌 배열로 만들어서 마지막에 눌러진 숫자를 배열에 계속 add 하면서 = 버튼을 눌렀을 때 연산이 되도록 했음 => 쓸 때 없는 값을 계속 채워 넣는 것을 비효율 적!
+  String equalRePush = ''; //마지막에 입력받은 숫자 사용하는 배열
   String variableValueAfter = "0"; //화면에 보여지는 숫자
   num variableValueBefore = 0; //계속 더해지는 숫자
 
-  bool operateBtnState = false; //사칙연산 활성화 상태
-  bool numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
-  bool plusState = false; //플러스 상태
-  bool minusState = false; //마이너스 상태
-  bool multiplyState = false; //곱하기 상태
-  bool divideState = false; // 나누기 상태
+  bool isOperateBtn = false; //사칙연산 활성화 상태
+  bool isNumberBtn = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+  bool isPressedPlusBtn = false; //플러스 상태
+  bool isPressedMinus = false; //마이너스 상태
+  bool isPressedMultiply = false; //곱하기 상태
+  bool isPressedDivide = false; // 나누기 상태
 
   void initOperateState() {
-    plusState = false;
-    minusState = false;
-    multiplyState = false;
-    divideState = false;
+    isPressedPlusBtn = false;
+    isPressedMinus = false;
+    isPressedMultiply = false;
+    isPressedDivide = false;
   }
 
   void onClickACBtn() {
     variableValueBefore = 0;
     variableValueAfter = "0";
-    equalRePush.clear();
+    equalRePush = '';
     initOperateState();
     setState(() {});
   }
 
   void onDecimalPoint() {
     // = 버튼 클릭 후 소수점을 누르면 계산 끝난걸로 간주 후 새롭게 계산
-    if (operateBtnState) {
-      operateBtnState = false;
+    if (isOperateBtn) {
+      isOperateBtn = false;
       variableValueAfter = "0.";
     }
     // = 버튼 클릭 전 계산이 끝나지 않은 상태
@@ -71,39 +73,38 @@ class _MyAppState extends State<MyApp> {
   }
 
   void onClickNumberBtn(String value) {
-    if (operateBtnState) {
-      operateBtnState = false;
+    if (isOperateBtn) {
+      isOperateBtn = false;
+      equalRePush = value; //미지막의 피연산자를 = 버튼을 눌렀을 때가 아닌 숫자를 눌렀을 때 대입함❗️❗️
       variableValueAfter = "0";
     }
     if (variableValueAfter == "0" && variableValueAfter.length == 1) {
       variableValueAfter = '';
     }
     variableValueAfter += value;
-    numberBtnState = true; //숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+    isNumberBtn = true; //숫자 누르기 전에 사칙연산 변경 시 기준점 역할
     setState(() {});
   }
 
   void onClickOperateBtn(String type) {
-    equalRePush.clear(); //= 버튼 클릭 후 사칙연산 버튼 클릭 시 배열 초기화
+    equalRePush = ''; //사칙연산 버튼 클릭 시 equalRePush 값을 다시 빈값으로 만듦
     num afterNum = num.parse(variableValueAfter);
 
     //variableValueBefore != 0 아닌 경우는 = 버튼 없이 사칙연산 버튼을 다시 눌러서 계속 계산할 때
     //numberBtnState가 false이면 숫자 입력없이 사칙연산만 변경했을 떄
-    if (variableValueBefore != 0 && numberBtnState) {
-      // print("plusState $plusState");
-      // print("minusState $minusState");
-
+    if (variableValueBefore != 0 && isNumberBtn) {
       /** 문제! 1 + 1 - 를 하게되면 2번째에 클린된 연산자가 실행됌
       * 처음에는 switch 문으로 사칙연산 타입을 받아와서 처리했음 -> 그래서 사칙연산을 누른 순간의 사칙연산으로 계산이 됌
       * 따라서 if문으로 바꾸고 변수로 선언한 사칙연산들의 불리언 값을 통해서 받아온 값으로 if문을 실행함
+      * print("isPressedPlusBtn $isPressedPlusBtn");
       */
-      if (plusState) {
+      if (isPressedPlusBtn) {
         variableValueBefore += afterNum;
-      } else if (minusState) {
+      } else if (isPressedMinus) {
         variableValueBefore -= afterNum;
-      } else if (multiplyState) {
+      } else if (isPressedMultiply) {
         variableValueBefore *= afterNum;
-      } else if (divideState) {
+      } else if (isPressedDivide) {
         variableValueBefore /= afterNum;
       }
       variableValueAfter = convertInt(variableValueBefore).toString();
@@ -117,71 +118,70 @@ class _MyAppState extends State<MyApp> {
 
     switch (type) {
       case "+":
-        plusState = true;
+        isPressedPlusBtn = true;
         break;
       case "―":
-        minusState = true;
+        isPressedMinus = true;
         break;
       case "x":
-        multiplyState = true;
+        isPressedMultiply = true;
         break;
       case "/":
-        divideState = true;
+        isPressedDivide = true;
         break;
     }
-    //numberBtnState = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
-    operateBtnState = true; //variableValueAfter = 0 -> ""이 되면서 새로운 화면 출력 값 만듦
+    isNumberBtn = false; //숫자 활성화 상태 => 숫자 누르기 전에 사칙연산 변경 시 기준점 역할
+    isOperateBtn = true; //variableValueAfter = 0 -> ""이 되면서 새로운 화면 출력 값 만듦
     setState(() {});
   }
 
   void onClickEqualBtn() {
     num afterNum = num.parse(variableValueAfter);
-    equalRePush.add(variableValueAfter); //두번째로 더해지는 수를 배열에 담은 후 인덱스 0번째를 계속 연산함
 
-    if (plusState) {
+    if (isPressedPlusBtn) {
       if (variableValueBefore == 0) {
-        variableValueAfter = (convertInt(
-                num.parse(variableValueAfter) + num.parse(equalRePush[0])))
-            .toString();
-      } else if (equalRePush.isEmpty) {
+        variableValueAfter =
+            (convertInt(num.parse(variableValueAfter) + num.parse(equalRePush)))
+                .toString();
+      } else if (equalRePush == '') {
         variableValueAfter =
             (convertInt(num.parse(variableValueAfter) + afterNum)).toString();
       } else {
         variableValueAfter =
             (convertInt(variableValueBefore + afterNum)).toString();
       }
-    } else if (minusState) {
+    } else if (isPressedMinus) {
       if (variableValueBefore == 0) {
-        variableValueAfter = (convertInt(
-                num.parse(variableValueAfter) - num.parse(equalRePush[0])))
-            .toString();
-      } else if (equalRePush.isEmpty) {
+        variableValueAfter =
+            (convertInt(num.parse(variableValueAfter) - num.parse(equalRePush)))
+                .toString();
+      } else if (equalRePush == '') {
         variableValueAfter =
             (convertInt(num.parse(variableValueAfter) - afterNum)).toString();
       } else {
         variableValueAfter =
             (convertInt(variableValueBefore - afterNum)).toString();
       }
-    } else if (multiplyState) {
+    } else if (isPressedMultiply) {
       if (variableValueBefore == 0) {
-        variableValueAfter = (convertInt(
-                num.parse(variableValueAfter) * num.parse(equalRePush[0])))
-            .toString();
-      } else if (equalRePush.isEmpty) {
+        variableValueAfter =
+            (convertInt(num.parse(variableValueAfter) * num.parse(equalRePush)))
+                .toString();
+      } else if (equalRePush == '') {
         variableValueAfter =
             (convertInt(num.parse(variableValueAfter) * afterNum)).toString();
       } else {
         variableValueAfter =
             (convertInt(variableValueBefore * afterNum)).toString();
       }
-    } else if (divideState) {
+    } else if (isPressedDivide) {
       if (num.parse(variableValueAfter) == 0) {
         variableValueAfter = "숫자 아님";
       } else if (variableValueBefore == 0) {
-        variableValueAfter = (convertInt(
-                num.parse(variableValueAfter) / num.parse(equalRePush[0])))
-            .toString();
-      } else if (equalRePush.isEmpty) {
+        variableValueAfter =
+            (convertInt(num.parse(variableValueAfter) / num.parse(equalRePush)))
+                .toString();
+      } else if (equalRePush == '') {
         variableValueAfter =
             (convertInt(num.parse(variableValueAfter) / afterNum)).toString();
       } else {
@@ -190,7 +190,7 @@ class _MyAppState extends State<MyApp> {
       }
     }
     variableValueBefore = 0; //variableValueBefore을 0 기준점으로 = 버튼만 눌렀을 때 연산함
-    operateBtnState = true;
+    isOperateBtn = true;
     setState(() {});
   }
 
